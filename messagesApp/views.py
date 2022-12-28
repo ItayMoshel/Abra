@@ -5,21 +5,9 @@ from rest_framework.response import Response
 from messagesApp.models import Message, User
 from messagesApp.serializers import MessageSerializer, UserSerializer
 from django.contrib.auth import authenticate
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-    IsAdminUser
-)
-from rest_framework.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-    HTTP_200_OK,
-    HTTP_403_FORBIDDEN,
-    HTTP_204_NO_CONTENT
-)
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.status import (HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND)
 from django.contrib.auth.models import User
 
 
@@ -173,7 +161,8 @@ def delete_message(request, message_id):
     message = Message.objects.get(id=message_id)
     serializer = MessageSerializer(message, many=False)
     receiver = str(serializer.data.get("receiver"))
-    if user == receiver:
+    sender = str(serializer.data.get("sender"))
+    if user == receiver or user == sender:
         try:
             message.delete()
             return JsonResponse({'message': 'Message deleted.'}, status=status.HTTP_204_NO_CONTENT)
