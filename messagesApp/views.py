@@ -17,7 +17,8 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_200_OK,
-    HTTP_403_FORBIDDEN
+    HTTP_403_FORBIDDEN,
+    HTTP_204_NO_CONTENT
 )
 from django.contrib.auth.models import User
 
@@ -72,11 +73,14 @@ def get_user(request):
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])
 def create_message(request):
+    user = str(request.user)
+    sender = str(request.data.get("sender"))
     message = MessageSerializer(data=request.data)
     if message.is_valid():
-        message.save()
-        return JsonResponse(message.data)
-    return JsonResponse(message.errors)
+        if user == sender:
+            message.save()
+            return Response(message.data)
+    return Response({"message":"Please insert correct sender name."}, HTTP_400_BAD_REQUEST)
 
 
 @permission_classes([IsAdminUser])
@@ -147,17 +151,31 @@ def delete_user(request, user_id):
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def read_message(request, message_id):
+    user = str(request.user)
     message = Message.objects.get(id=message_id)
-    message.is_read = True
-    message.save()
     serializer = MessageSerializer(message, many=False)
-    return Response(serializer.data)
+    receiver = str(serializer.data.get("receiver"))
+    if user == receiver:
+        message.is_read = True
+        message.save()
+        return Response(serializer.data)
+    else:
+        return Response([], HTTP_400_BAD_REQUEST)
 
 
 @csrf_exempt
 @permission_classes([IsAuthenticated])
 @api_view(['DELETE'])
 def delete_message(request, message_id):
+    user = str(request.user)
     message = Message.objects.get(id=message_id)
-    message.delete()
-    return JsonResponse({'message': 'Message deleted.'}, status=status.HTTP_204_NO_CONTENT)
+    serializer = MessageSerializer(message, many=False)
+    receiver = str(serializer.data.get("receiver"))
+    if user == receiver:
+        try:
+            message.delete()
+            return JsonResponse({'message': 'Message deleted.'}, status=status.HTTP_204_NO_CONTENT)
+        except message.DoesNotExist:
+            return Response({"message":"Message does not exist."})
+    else:
+        return Response({"message":"Cannot delete message"})
