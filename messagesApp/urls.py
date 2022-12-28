@@ -10,7 +10,7 @@ urlpatterns = [
     path('api/view_users/', views.view_users),
     path('api/view_messages/', views.view_messages),
     path('api/read_message/<str:message_id>/', views.read_message),
-    path('api/user_messages/', views.user_messages),
+    path('api/user_inbox/', views.user_inbox),
     path('api/user_sent_messages/', views.user_sent_messages),
     # path('api/user_to_user_messages/<str:receiver>/', views.user_to_user_messages),
     path('api/user_unread_messages/', views.user_unread_messages),

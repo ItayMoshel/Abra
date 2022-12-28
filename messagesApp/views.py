@@ -23,7 +23,7 @@ from rest_framework.status import (
 from django.contrib.auth.models import User
 
 
-@csrf_exempt
+
 @api_view(["POST"])
 @permission_classes((AllowAny,))
 def login(request):
@@ -43,7 +43,7 @@ def login(request):
         return Response({'error': 'Invalid Credentials'}, status=HTTP_404_NOT_FOUND)
 
 
-@csrf_exempt
+
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def register_user(request):
@@ -61,7 +61,7 @@ def register_user(request):
         return Response([], status=status.HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
+
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def get_user(request):
@@ -69,7 +69,7 @@ def get_user(request):
     return Response(serializer.data)
 
 
-@csrf_exempt
+
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])
 def create_message(request):
@@ -100,7 +100,7 @@ def user_unread_messages(request):
     return Response(serializer.data)
 
 
-@csrf_exempt
+
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def user_sent_messages(request):
@@ -110,10 +110,10 @@ def user_sent_messages(request):
     return Response(serializer.data)
 
 
-@csrf_exempt
+
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
-def user_messages(request):
+def user_inbox(request):
     user = request.user
     messages = Message.objects.filter(receiver=user)
     serializer = MessageSerializer(messages, many=True)
@@ -138,16 +138,18 @@ def view_users(request):
     return Response(serializer.data)
 
 
-@csrf_exempt
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def delete_user(request, user_id):
     user = User.objects.get(id=user_id)
-    user.delete()
+    try:
+        user.delete()
+    except user.DoesNotExist:
+        return Response({"message":"User does not exist"})
     return JsonResponse({'message': 'User deleted.'}, status=status.HTTP_204_NO_CONTENT)
 
 
-@csrf_exempt
+
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def read_message(request, message_id):
@@ -163,7 +165,7 @@ def read_message(request, message_id):
         return Response([], HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
+
 @permission_classes([IsAuthenticated])
 @api_view(['DELETE'])
 def delete_message(request, message_id):
